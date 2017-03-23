@@ -1,0 +1,21 @@
+{
+    "name": "avalanche-development/swagger-caster-middleware",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "jacobemerick",
+            "email": "jpemeric@gmail.com"
+        }
+    ],
+    "require": {
+        "psr/log": "^1.0",
+        "psr/http-message": "^1.0",
+        "avalanche-development/peel": "^0.3.0",
+        "avalanche-development/swagger-router-middleware": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "AvalancheDevelopment\\SwaggerCasterMiddleware\\": "src/"
+        }
+    }
+}
