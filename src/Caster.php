@@ -171,4 +171,12 @@ class Caster implements LoggerAwareInterface
 
         return $value;
     }
+
+    /**
+     * @param string $message
+     */
+    protected function log($message)
+    {
+        $this->logger->debug("swagger-caster-middleware: {$message}");
+    }
 }
