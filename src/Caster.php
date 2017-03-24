@@ -5,7 +5,8 @@ namespace AvalancheDevelopment\SwaggerCasterMiddleware;
 use AvalancheDevelopment\Peel\HttpError\BadRequest;
 use DateTime;
 use Exception;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
@@ -26,7 +27,7 @@ class Caster implements LoggerAwareInterface
      * @param callable $next
      * @return ResponseInterface $response
      */
-    public function __invoke(RequestInterface $request, ResponseInterface $response, callable $next)
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
         if (!$request->getAttribute('swagger')) {
             $this->log('no swagger information found in request, skipping');
