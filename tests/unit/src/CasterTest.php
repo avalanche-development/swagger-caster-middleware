@@ -2,8 +2,9 @@
 
 namespace AvalancheDevelopment\SwaggerCasterMiddleware;
 
-use AvalancheDevelopment\SwaggerRouterMiddleware\Parser\ParserInterface;
+use AvalancheDevelopment\SwaggerRouterMiddleware\ParsedSwaggerInterface;
 use DateTime;
+use Exception;
 use PHPUnit_Framework_TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -56,24 +57,106 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $caster->expects($this->never())
             ->method('updateSwaggerParams');
 
-        $result = $caster->__invoke($mockRequest, $mockResponse, $mockCallable);
-
-        $this->assertSame($mockResponse, $result);
+        $caster->__invoke($mockRequest, $mockResponse, $mockCallable);
     }
 
+    /**
+     * @expectedException Exception
+     */
     public function testInvokeBailsIfUpdateSwaggerFails()
     {
-        $this->markTestIncomplete();
+        $mockException = $this->createMock(Exception::class);
+        $mockSwagger = $this->createMock(ParsedSwaggerInterface::class);
+
+        $mockRequest = $this->createMock(ServerRequestInterface::class);
+        $mockRequest->method('getAttribute')
+            ->willReturn($mockSwagger);
+
+        $mockResponse = $this->createMock(ResponseInterface::class);
+        $mockCallable = function ($request, $response) {
+            return $response;
+        };
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'log',
+                'updateSwaggerParams',
+            ])
+            ->getMock();
+        $caster->expects($this->never())
+            ->method('log');
+        $caster->expects($this->once())
+            ->method('updateSwaggerParams')
+            ->with($mockSwagger)
+            ->will($this->throwException($mockException));
+
+        $caster->__invoke($mockRequest, $mockResponse, $mockCallable);
     }
 
     public function testInvokeUpdatesSwaggerAttribute()
     {
-        $this->markTestIncomplete();
+        $mockSwagger = $this->createMock(ParsedSwaggerInterface::class);
+
+        $mockRequest = $this->createMock(ServerRequestInterface::class);
+        $mockRequest->method('getAttribute')
+            ->willReturn($mockSwagger);
+        $mockRequest->expects($this->once())
+            ->method('withAttribute')
+            ->with('swagger', $mockSwagger)
+            ->willReturn($mockRequest);
+
+        $mockResponse = $this->createMock(ResponseInterface::class);
+        $mockCallable = function ($request, $response) use ($mockRequest) {
+            $this->assertSame($mockRequest, $request);
+            return $response;
+        };
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'log',
+                'updateSwaggerParams',
+            ])
+            ->getMock();
+        $caster->expects($this->never())
+            ->method('log');
+        $caster->method('updateSwaggerParams')
+            ->willReturn($mockSwagger);
+
+        $caster->__invoke($mockRequest, $mockResponse, $mockCallable);
     }
 
     public function testInvokePassesAlongResponseFromCallStack()
     {
-        $this->markTestIncomplete();
+        $mockSwagger = $this->createMock(ParsedSwaggerInterface::class);
+
+        $mockRequest = $this->createMock(ServerRequestInterface::class);
+        $mockRequest->method('getAttribute')
+            ->willReturn($mockSwagger);
+        $mockRequest->method('withAttribute')
+            ->willReturn($mockRequest);
+
+        $mockResponse = $this->createMock(ResponseInterface::class);
+        $mockCallable = function ($request, $response) use ($mockRequest) {
+            return $response;
+        };
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'log',
+                'updateSwaggerParams',
+            ])
+            ->getMock();
+        $caster->expects($this->never())
+            ->method('log');
+        $caster->method('updateSwaggerParams')
+            ->willReturn($mockSwagger);
+
+        $result = $caster->__invoke($mockRequest, $mockResponse, $mockCallable);
+
+        $this->assertSame($mockResponse, $result);
     }
 
     public function testUpdateSwaggerWalksSwaggerParamsThroughCast()

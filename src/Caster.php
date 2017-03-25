@@ -3,6 +3,7 @@
 namespace AvalancheDevelopment\SwaggerCasterMiddleware;
 
 use AvalancheDevelopment\Peel\HttpError\BadRequest;
+use AvalancheDevelopment\SwaggerRouterMiddleware\ParsedSwaggerInterface;
 use DateTime;
 use Exception;
 use Psr\Http\Message\ResponseInterface;
