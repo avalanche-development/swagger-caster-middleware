@@ -47,7 +47,8 @@ class Caster implements LoggerAwareInterface
      */
     protected function updateSwaggerParams(ParsedSwaggerInterface $swagger)
     {
-        array_walk($swagger->getParams(), [ $this, 'castType' ]);
+        $updatedParams = array_map([ $this, 'castType' ], $swagger->getParams());
+        $swagger->setParams($updatedParams);
         return $swagger;
     }
 

@@ -161,7 +161,36 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testUpdateSwaggerWalksSwaggerParamsThroughCast()
     {
-        $this->markTestIncomplete();
+        $mockParams = [
+            [ 'first call' ],
+            [ 'second call' ],
+        ];
+
+        $mockSwagger = $this->createMock(ParsedSwaggerInterface::class);
+        $mockSwagger->expects($this->once())
+            ->method('getParams')
+            ->willReturn($mockParams);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedUpdateSwagger = $reflectedCaster->getMethod('updateSwaggerParams');
+        $reflectedUpdateSwagger->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'castType',
+            ])
+            ->getMock();
+        $caster->expects($this->exactly(count($mockParams)))
+            ->method('castType')
+            ->withConsecutive(
+                [ $mockParams[0] ],
+                [ $mockParams[1] ]
+            );
+
+        $reflectedUpdateSwagger->invokeArgs($caster, [
+            $mockSwagger,
+        ]);
     }
 
     public function testUpdateSwaggerBailsIfCastFails()
@@ -898,6 +927,6 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedLogger->setValue($caster, $mockLogger);
         $reflectedLog->invokeArgs($caster, [
             $message,
-        ]);       
+        ]);
     }
 }
