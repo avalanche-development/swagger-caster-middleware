@@ -193,14 +193,98 @@ class CasterTest extends PHPUnit_Framework_TestCase
         ]);
     }
 
+    /**
+     * @expectedException Exception
+     */
     public function testUpdateSwaggerBailsIfCastFails()
     {
-        $this->markTestIncomplete();
+        $mockException = $this->createMock(Exception::class);
+
+        $mockParams = [
+            [ 'parameter' ],
+        ];
+
+        $mockSwagger = $this->createMock(ParsedSwaggerInterface::class);
+        $mockSwagger->method('getParams')
+            ->willReturn($mockParams);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedUpdateSwagger = $reflectedCaster->getMethod('updateSwaggerParams');
+        $reflectedUpdateSwagger->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'castType',
+            ])
+            ->getMock();
+        $caster->method('castType')
+            ->will($this->throwException($mockException));
+
+        $reflectedUpdateSwagger->invokeArgs($caster, [
+            $mockSwagger,
+        ]);
+    }
+
+    public function testUpdateSwaggerUpdatesParams()
+    {
+        $mockParams = [
+            [ 'parameter' ],
+        ];
+
+        $mockSwagger = $this->createMock(ParsedSwaggerInterface::class);
+        $mockSwagger->method('getParams')
+            ->willReturn($mockParams);
+        $mockSwagger->expects($this->once())
+            ->method('setParams')
+            ->with($mockParams);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedUpdateSwagger = $reflectedCaster->getMethod('updateSwaggerParams');
+        $reflectedUpdateSwagger->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'castType',
+            ])
+            ->getMock();
+        $caster->method('castType')
+            ->will($this->returnArgument(0));
+
+        $reflectedUpdateSwagger->invokeArgs($caster, [
+            $mockSwagger,
+        ]);
     }
 
     public function testUpdateSwaggerReturnsModifiedSwagger()
     {
-        $this->markTestIncomplete();
+        $mockParams = [
+            [ 'parameter' ],
+        ];
+
+        $mockSwagger = $this->createMock(ParsedSwaggerInterface::class);
+        $mockSwagger->method('getParams')
+            ->willReturn($mockParams);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedUpdateSwagger = $reflectedCaster->getMethod('updateSwaggerParams');
+        $reflectedUpdateSwagger->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'castType',
+            ])
+            ->getMock();
+        $caster->method('castType')
+            ->will($this->returnArgument(0));
+
+        $updatedSwagger = $reflectedUpdateSwagger->invokeArgs($caster, [
+            $mockSwagger,
+        ]);
+
+        $this->assertSame($mockSwagger, $updatedSwagger);
     }
 
     public function testCastTypeHandlesArray()
