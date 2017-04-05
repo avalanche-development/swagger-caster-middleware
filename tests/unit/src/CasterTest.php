@@ -159,12 +159,44 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $this->assertSame($mockResponse, $result);
     }
 
+    public function testUpdateSwaggerHandlesEmptySwaggerParams()
+    {
+        $mockParams = [];
+
+        $mockSwagger = $this->createMock(ParsedSwaggerInterface::class);
+        $mockSwagger->expects($this->once())
+            ->method('getParams')
+            ->willReturn($mockParams);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedUpdateSwagger = $reflectedCaster->getMethod('updateSwaggerParams');
+        $reflectedUpdateSwagger->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'castType',
+            ])
+            ->getMock();
+        $caster->expects($this->never())
+            ->method('castType');
+
+        $reflectedUpdateSwagger->invokeArgs($caster, [
+            $mockSwagger,
+        ]);
+    }
+
     public function testUpdateSwaggerWalksSwaggerParamsThroughCast()
     {
         $mockParams = [
-            [ 'first call' ],
-            [ 'second call' ],
+            [
+                'value' => 'first value',
+            ],
+            [
+                'value' => 'second value',
+            ],
         ];
+        $mockValues = array_column($mockParams, 'value');
 
         $mockSwagger = $this->createMock(ParsedSwaggerInterface::class);
         $mockSwagger->expects($this->once())
@@ -184,8 +216,8 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $caster->expects($this->exactly(count($mockParams)))
             ->method('castType')
             ->withConsecutive(
-                [ $mockParams[0] ],
-                [ $mockParams[1] ]
+                [ $mockValues[0], $mockParams[0] ],
+                [ $mockValues[1], $mockParams[1] ]
             );
 
         $reflectedUpdateSwagger->invokeArgs($caster, [
@@ -201,7 +233,9 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $mockException = $this->createMock(Exception::class);
 
         $mockParams = [
-            [ 'parameter' ],
+            [
+                'value' => 'some value',
+            ],
         ];
 
         $mockSwagger = $this->createMock(ParsedSwaggerInterface::class);
@@ -228,8 +262,12 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testUpdateSwaggerUpdatesParams()
     {
+        $this->markTestIncomplete();
+
         $mockParams = [
-            [ 'parameter' ],
+            [
+                'value' => 'some value',
+            ],
         ];
 
         $mockSwagger = $this->createMock(ParsedSwaggerInterface::class);
@@ -250,7 +288,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
             ])
             ->getMock();
         $caster->method('castType')
-            ->will($this->returnArgument(0));
+            ->will($this->returnArgument(1));
 
         $reflectedUpdateSwagger->invokeArgs($caster, [
             $mockSwagger,
@@ -259,6 +297,8 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testUpdateSwaggerReturnsModifiedSwagger()
     {
+        $this->markTestIncomplete();
+
         $mockParams = [
             [ 'parameter' ],
         ];
@@ -289,8 +329,6 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testCastTypeHandlesArray()
     {
-        $this->markTestIncomplete();
-
         $parameter = [
             'items' => [
                 'type' => 'string',
@@ -304,25 +342,24 @@ class CasterTest extends PHPUnit_Framework_TestCase
             return (string) $row;
         }, $value);
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedCastType = $reflectedParameterParser->getMethod('castType');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedCastType = $reflectedCaster->getMethod('castType');
         $reflectedCastType->setAccessible(true);
 
-        $parameterParser = $this->getMockBuilder(ParameterParser::class)
-            ->setMethods([ 'getParameterType' ])
+        $caster = $this->getMockBuilder(Caster::class)
+            ->setMethods([
+                'getParameterType',
+            ])
             ->getMock();
-        $parameterParser->expects($this->exactly(3))
+        $caster->expects($this->exactly(3))
             ->method('getParameterType')
             ->with($this->isType('array'))
             ->will($this->onConsecutiveCalls('array', 'string', 'string'));
 
-        $result = $reflectedCastType->invokeArgs(
-            $parameterParser,
-            [
-                $value,
-                $parameter,
-            ]
-        );
+        $result = $reflectedCastType->invokeArgs($caster, [
+            $value,
+            $parameter,
+        ]);
 
         $this->assertSame($expectedValue, $result);
     }
