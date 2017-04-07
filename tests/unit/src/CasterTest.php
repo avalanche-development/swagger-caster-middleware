@@ -8,6 +8,7 @@ use Exception;
 use PHPUnit_Framework_TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -371,27 +372,25 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testCastTypeHandlesBoolean()
     {
-        $this->markTestIncomplete();
-
         $parameter = [
             'some value'
         ];
         $value = 'false';
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedCastType = $reflectedParameterParser->getMethod('castType');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedCastType = $reflectedCaster->getMethod('castType');
         $reflectedCastType->setAccessible(true);
 
-        $parameterParser = $this->getMockBuilder(ParameterParser::class)
+        $caster = $this->getMockBuilder(Caster::class)
             ->setMethods([ 'getParameterType' ])
             ->getMock();
-        $parameterParser->expects($this->once())
+        $caster->expects($this->once())
             ->method('getParameterType')
             ->with($parameter)
             ->willReturn('boolean');
 
         $result = $reflectedCastType->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 $parameter,
@@ -403,27 +402,25 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testCastTypeHandlesFile()
     {
-        $this->markTestIncomplete();
-
         $parameter = [
             'some value'
         ];
         $value = $this->createMock(UploadedFileInterface::class);
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedCastType = $reflectedParameterParser->getMethod('castType');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedCastType = $reflectedCaster->getMethod('castType');
         $reflectedCastType->setAccessible(true);
 
-        $parameterParser = $this->getMockBuilder(ParameterParser::class)
+        $caster = $this->getMockBuilder(Caster::class)
             ->setMethods([ 'getParameterType' ])
             ->getMock();
-        $parameterParser->expects($this->once())
+        $caster->expects($this->once())
             ->method('getParameterType')
             ->with($parameter)
             ->willReturn('file');
 
         $result = $reflectedCastType->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 $parameter,
@@ -435,27 +432,25 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testCastTypeHandlesInteger()
     {
-        $this->markTestIncomplete();
-
         $parameter = [
             'some value'
         ];
         $value = '245';
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedCastType = $reflectedParameterParser->getMethod('castType');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedCastType = $reflectedCaster->getMethod('castType');
         $reflectedCastType->setAccessible(true);
 
-        $parameterParser = $this->getMockBuilder(ParameterParser::class)
+        $caster = $this->getMockBuilder(Caster::class)
             ->setMethods([ 'getParameterType' ])
             ->getMock();
-        $parameterParser->expects($this->once())
+        $caster->expects($this->once())
             ->method('getParameterType')
             ->with($parameter)
             ->willReturn('integer');
 
         $result = $reflectedCastType->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 $parameter,
@@ -467,27 +462,25 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testCastTypeHandlesNumber()
     {
-        $this->markTestIncomplete();
-
         $parameter = [
             'some value',
         ];
         $value = '3.141592';
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedCastType = $reflectedParameterParser->getMethod('castType');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedCastType = $reflectedCaster->getMethod('castType');
         $reflectedCastType->setAccessible(true);
 
-        $parameterParser = $this->getMockBuilder(ParameterParser::class)
+        $caster = $this->getMockBuilder(Caster::class)
             ->setMethods([ 'getParameterType' ])
             ->getMock();
-        $parameterParser->expects($this->once())
+        $caster->expects($this->once())
             ->method('getParameterType')
             ->with($parameter)
             ->willReturn('number');
 
         $result = $reflectedCastType->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 $parameter,
@@ -499,8 +492,6 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testCastTypeHandlesObject()
     {
-        $this->markTestIncomplete();
-
         $parameter = [
             'some value',
         ];
@@ -508,24 +499,24 @@ class CasterTest extends PHPUnit_Framework_TestCase
             'key' => 'value',
         ];
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedCastType = $reflectedParameterParser->getMethod('castType');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedCastType = $reflectedCaster->getMethod('castType');
         $reflectedCastType->setAccessible(true);
 
-        $parameterParser = $this->getMockBuilder(ParameterParser::class)
+        $caster = $this->getMockBuilder(Caster::class)
             ->setMethods([ 'formatObject', 'getParameterType' ])
             ->getMock();
-        $parameterParser->expects($this->once())
+        $caster->expects($this->once())
             ->method('formatObject')
             ->with(json_encode($value), $parameter)
             ->willReturn($value);
-        $parameterParser->expects($this->once())
+        $caster->expects($this->once())
             ->method('getParameterType')
             ->with($parameter)
             ->willReturn('object');
 
         $result = $reflectedCastType->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 json_encode($value),
                 $parameter,
@@ -537,31 +528,29 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testCastTypeHandlesString()
     {
-        $this->markTestIncomplete();
-
         $parameter = [
             'some value',
         ];
         $value = 1337;
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedCastType = $reflectedParameterParser->getMethod('castType');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedCastType = $reflectedCaster->getMethod('castType');
         $reflectedCastType->setAccessible(true);
 
-        $parameterParser = $this->getMockBuilder(ParameterParser::class)
+        $caster = $this->getMockBuilder(Caster::class)
             ->setMethods([ 'formatString', 'getParameterType' ])
             ->getMock();
-        $parameterParser->expects($this->once())
+        $caster->expects($this->once())
             ->method('formatString')
             ->with($value, $parameter)
             ->will($this->returnArgument(0));
-        $parameterParser->expects($this->once())
+        $caster->expects($this->once())
             ->method('getParameterType')
             ->with($parameter)
             ->willReturn('string');
 
         $result = $reflectedCastType->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 $parameter,
@@ -577,26 +566,24 @@ class CasterTest extends PHPUnit_Framework_TestCase
      */
     public function testCastTypeBailsOnUnknownType()
     {
-        $this->markTestIncomplete();
-
         $parameter = [
             'some value',
         ];
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedCastType = $reflectedParameterParser->getMethod('castType');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedCastType = $reflectedCaster->getMethod('castType');
         $reflectedCastType->setAccessible(true);
 
-        $parameterParser = $this->getMockBuilder(ParameterParser::class)
+        $caster = $this->getMockBuilder(Caster::class)
             ->setMethods([ 'getParameterType' ])
             ->getMock();
-        $parameterParser->expects($this->once())
+        $caster->expects($this->once())
             ->method('getParameterType')
             ->with($parameter)
             ->willReturn('invalid');
 
         $reflectedCastType->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 '',
                 $parameter,
@@ -606,8 +593,6 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testGetParameterTypeDefaultsToType()
     {
-        $this->markTestIncomplete();
-
         $parameter = [
             'in' => 'path',
             'type' => 'good type',
@@ -616,13 +601,13 @@ class CasterTest extends PHPUnit_Framework_TestCase
             ],
         ];
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedGetParameterType = $reflectedParameterParser->getMethod('getParameterType');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedGetParameterType = $reflectedCaster->getMethod('getParameterType');
         $reflectedGetParameterType->setAccessible(true);
 
-        $parameterParser = new ParameterParser;
+        $caster = new Caster;
         $result = $reflectedGetParameterType->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $parameter,
             ]
@@ -633,8 +618,6 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testGetParameterTypeBodyUsesSchemaType()
     {
-        $this->markTestIncomplete();
-
         $parameter = [
             'in' => 'body',
             'type' => 'bad type',
@@ -643,13 +626,13 @@ class CasterTest extends PHPUnit_Framework_TestCase
             ],
         ];
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedGetParameterType = $reflectedParameterParser->getMethod('getParameterType');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedGetParameterType = $reflectedCaster->getMethod('getParameterType');
         $reflectedGetParameterType->setAccessible(true);
 
-        $parameterParser = new ParameterParser;
+        $caster = new Caster;
         $result = $reflectedGetParameterType->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $parameter,
             ]
@@ -664,23 +647,19 @@ class CasterTest extends PHPUnit_Framework_TestCase
      */
     public function testGetParameterTypeBailsOnEmptyType()
     {
-        $this->markTestIncomplete();
-
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedGetParameterType = $reflectedParameterParser->getMethod('getParameterType');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedGetParameterType = $reflectedCaster->getMethod('getParameterType');
         $reflectedGetParameterType->setAccessible(true);
 
-        $parameterParser = new ParameterParser;
+        $caster = new Caster;
         $reflectedGetParameterType->invokeArgs(
-            $parameterParser,
+            $caster,
             [[]]
         );
     }
 
     public function testFormatObjectHandlesObject()
     {
-        $this->markTestIncomplete();
-
         $parameter = [
             'schema' => [
                 'properties' => [
@@ -695,20 +674,20 @@ class CasterTest extends PHPUnit_Framework_TestCase
             'key' => 'value',
         ];
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedFormatObject = $reflectedParameterParser->getMethod('formatObject');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedFormatObject = $reflectedCaster->getMethod('formatObject');
         $reflectedFormatObject->setAccessible(true);
 
-        $parameterParser = $this->getMockBuilder(ParameterParser::class)
+        $caster = $this->getMockBuilder(Caster::class)
             ->setMethods([ 'castType' ])
             ->getMock();
-        $parameterParser->expects($this->once())
+        $caster->expects($this->once())
             ->method('castType')
             ->with($value->key, $parameter['schema']['properties']['key'])
             ->willReturn('value');
 
         $result = $reflectedFormatObject->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 $parameter,
@@ -720,8 +699,6 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testFormatObjectHandlesEncodedObject()
     {
-        $this->markTestIncomplete();
-
         $parameter = [
             'schema' => [
                 'properties' => [
@@ -736,20 +713,20 @@ class CasterTest extends PHPUnit_Framework_TestCase
             'key' => 'value',
         ];
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedFormatObject = $reflectedParameterParser->getMethod('formatObject');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedFormatObject = $reflectedCaster->getMethod('formatObject');
         $reflectedFormatObject->setAccessible(true);
 
-        $parameterParser = $this->getMockBuilder(ParameterParser::class)
+        $caster = $this->getMockBuilder(Caster::class)
             ->setMethods([ 'castType' ])
             ->getMock();
-        $parameterParser->expects($this->once())
+        $caster->expects($this->once())
             ->method('castType')
             ->with($value->key, $parameter['schema']['properties']['key'])
             ->willReturn('value');
 
         $result = $reflectedFormatObject->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 json_encode($value),
                 $parameter,
@@ -761,8 +738,6 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testFormatObjectHandlesPartiallyDefinedParameter()
     {
-        $this->markTestIncomplete();
-
         $parameter = [
             'properties' => [
                 'key' => [
@@ -775,20 +750,20 @@ class CasterTest extends PHPUnit_Framework_TestCase
             'key' => 'value',
         ];
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedFormatObject = $reflectedParameterParser->getMethod('formatObject');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedFormatObject = $reflectedCaster->getMethod('formatObject');
         $reflectedFormatObject->setAccessible(true);
 
-        $parameterParser = $this->getMockBuilder(ParameterParser::class)
+        $caster = $this->getMockBuilder(Caster::class)
             ->setMethods([ 'castType' ])
             ->getMock();
-        $parameterParser->expects($this->once())
+        $caster->expects($this->once())
             ->method('castType')
             ->with($value->key, $parameter['properties']['key'])
             ->willReturn('value');
 
         $result = $reflectedFormatObject->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 json_encode($value),
                 $parameter,
@@ -800,26 +775,24 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testFormatObjectHandlesUndefinedParameterObject()
     {
-        $this->markTestIncomplete();
-
         $parameter = [];
 
         $value = (object) [
             'key' => 'value',
         ];
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedFormatObject = $reflectedParameterParser->getMethod('formatObject');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedFormatObject = $reflectedCaster->getMethod('formatObject');
         $reflectedFormatObject->setAccessible(true);
 
-        $parameterParser = $this->getMockBuilder(ParameterParser::class)
+        $caster = $this->getMockBuilder(Caster::class)
             ->setMethods([ 'castType' ])
             ->getMock();
-        $parameterParser->expects($this->never())
+        $caster->expects($this->never())
             ->method('castType');
 
         $result = $reflectedFormatObject->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 $parameter,
@@ -835,17 +808,15 @@ class CasterTest extends PHPUnit_Framework_TestCase
      */
     public function testFormatObjectBailsOnBadObject()
     {
-        $this->markTestIncomplete();
-
         $value = 'some string';
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedFormatObject = $reflectedParameterParser->getMethod('formatObject');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedFormatObject = $reflectedCaster->getMethod('formatObject');
         $reflectedFormatObject->setAccessible(true);
 
-        $parameterParser = new ParameterParser;
+        $caster = new Caster;
         $reflectedFormatObject->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 [],
@@ -855,8 +826,6 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testFormatObjectHandlesPartialDefinition()
     {
-        $this->markTestIncomplete();
-
         $parameter = [
             'properties' => [
                 'key' => [
@@ -869,20 +838,20 @@ class CasterTest extends PHPUnit_Framework_TestCase
             'key' => 'value',
         ];
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedFormatObject = $reflectedParameterParser->getMethod('formatObject');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedFormatObject = $reflectedCaster->getMethod('formatObject');
         $reflectedFormatObject->setAccessible(true);
 
-        $parameterParser = $this->getMockBuilder(ParameterParser::class)
+        $caster = $this->getMockBuilder(Caster::class)
             ->setMethods([ 'castType' ])
             ->getMock();
-        $parameterParser->expects($this->once())
+        $caster->expects($this->once())
             ->method('castType')
             ->with($value->key, $parameter['properties']['key'])
             ->willReturn('value');
 
         $result = $reflectedFormatObject->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 $parameter,
@@ -894,17 +863,15 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testFormatStringIgnoresFormatlessParameter()
     {
-        $this->markTestIncomplete();
-
         $value = 'some string';
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedFormatString = $reflectedParameterParser->getMethod('formatString');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedFormatString = $reflectedCaster->getMethod('formatString');
         $reflectedFormatString->setAccessible(true);
 
-        $parameterParser = new ParameterParser;
+        $caster = new Caster;
         $result = $reflectedFormatString->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 []
@@ -916,18 +883,16 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testFormatStringHandlesDate()
     {
-        $this->markTestIncomplete();
-
         $value = '2016-10-18';
         $expectedValue = DateTime::createFromFormat('Y-m-d', $value);
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedFormatString = $reflectedParameterParser->getMethod('formatString');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedFormatString = $reflectedCaster->getMethod('formatString');
         $reflectedFormatString->setAccessible(true);
 
-        $parameterParser = new ParameterParser;
+        $caster = new Caster;
         $result = $reflectedFormatString->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 [ 'format' => 'date' ],
@@ -943,17 +908,15 @@ class CasterTest extends PHPUnit_Framework_TestCase
      */
     public function testFormatStringHandlesDateFailures()
     {
-        $this->markTestIncomplete();
-
         $value = 'invalid date';
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedFormatString = $reflectedParameterParser->getMethod('formatString');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedFormatString = $reflectedCaster->getMethod('formatString');
         $reflectedFormatString->setAccessible(true);
 
-        $parameterParser = new ParameterParser;
+        $caster = new Caster;
         $reflectedFormatString->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 [ 'format' => 'date' ],
@@ -963,18 +926,16 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testFormatStringHandlesDateTime()
     {
-        $this->markTestIncomplete();
-
         $value = '2016-10-18T+07:00';
         $expectedValue = new DateTime($value);
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedFormatString = $reflectedParameterParser->getMethod('formatString');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedFormatString = $reflectedCaster->getMethod('formatString');
         $reflectedFormatString->setAccessible(true);
 
-        $parameterParser = new ParameterParser;
+        $caster = new Caster;
         $result = $reflectedFormatString->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 [ 'format' => 'date-time' ],
@@ -990,17 +951,15 @@ class CasterTest extends PHPUnit_Framework_TestCase
      */
     public function testFormatStringHandlesDateTimeFailures()
     {
-        $this->markTestIncomplete();
-
         $value = 'invalid date';
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedFormatString = $reflectedParameterParser->getMethod('formatString');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedFormatString = $reflectedCaster->getMethod('formatString');
         $reflectedFormatString->setAccessible(true);
 
-        $parameterParser = new ParameterParser;
+        $caster = new Caster;
         $reflectedFormatString->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 [ 'format' => 'date-time' ],
@@ -1010,17 +969,15 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testFormatStringIgnoresOnUnmatchedFormat()
     {
-        $this->markTestIncomplete();
-
         $value = 'some value';
 
-        $reflectedParameterParser = new ReflectionClass(ParameterParser::class);
-        $reflectedFormatString = $reflectedParameterParser->getMethod('formatString');
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedFormatString = $reflectedCaster->getMethod('formatString');
         $reflectedFormatString->setAccessible(true);
 
-        $parameterParser = new ParameterParser;
+        $caster = new Caster;
         $result = $reflectedFormatString->invokeArgs(
-            $parameterParser,
+            $caster,
             [
                 $value,
                 [ 'format' => 'random' ],
