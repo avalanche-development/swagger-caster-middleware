@@ -262,11 +262,15 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testUpdateSwaggerUpdatesParams()
     {
-        $this->markTestIncomplete();
-
         $mockParams = [
             [
                 'value' => 'some value',
+            ],
+        ];
+        $updatedParams = [
+            [
+                'originalValue' => 'some value',
+                'value' => 'some updated value',
             ],
         ];
 
@@ -275,7 +279,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
             ->willReturn($mockParams);
         $mockSwagger->expects($this->once())
             ->method('setParams')
-            ->with($mockParams);
+            ->with($updatedParams);
 
         $reflectedCaster = new ReflectionClass(Caster::class);
         $reflectedUpdateSwagger = $reflectedCaster->getMethod('updateSwaggerParams');
@@ -288,7 +292,8 @@ class CasterTest extends PHPUnit_Framework_TestCase
             ])
             ->getMock();
         $caster->method('castType')
-            ->will($this->returnArgument(1));
+            ->with('some value')
+            ->willReturn('some updated value');
 
         $reflectedUpdateSwagger->invokeArgs($caster, [
             $mockSwagger,
@@ -297,10 +302,10 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testUpdateSwaggerReturnsModifiedSwagger()
     {
-        $this->markTestIncomplete();
-
         $mockParams = [
-            [ 'parameter' ],
+            [
+                'value' => 'some value',
+            ],
         ];
 
         $mockSwagger = $this->createMock(ParsedSwaggerInterface::class);
