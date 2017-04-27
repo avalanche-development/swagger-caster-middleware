@@ -495,7 +495,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $parameter = [
             'some value',
         ];
-        $value = (object) [
+        $value = [
             'key' => 'value',
         ];
 
@@ -508,7 +508,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
             ->getMock();
         $caster->expects($this->once())
             ->method('formatObject')
-            ->with(json_encode($value), $parameter)
+            ->with($value, $parameter)
             ->willReturn($value);
         $caster->expects($this->once())
             ->method('getParameterType')
@@ -518,7 +518,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $result = $reflectedCastType->invokeArgs(
             $caster,
             [
-                json_encode($value),
+                $value,
                 $parameter,
             ]
         );
@@ -670,7 +670,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
             ],
         ];
 
-        $value = (object) [
+        $value = [
             'key' => 'value',
         ];
 
@@ -683,52 +683,13 @@ class CasterTest extends PHPUnit_Framework_TestCase
             ->getMock();
         $caster->expects($this->once())
             ->method('castType')
-            ->with($value->key, $parameter['schema']['properties']['key'])
+            ->with($value['key'], $parameter['schema']['properties']['key'])
             ->willReturn('value');
 
         $result = $reflectedFormatObject->invokeArgs(
             $caster,
             [
                 $value,
-                $parameter,
-            ]
-        );
-
-        $this->assertEquals($value, $result);
-    }
-
-    public function testFormatObjectHandlesEncodedObject()
-    {
-        $parameter = [
-            'schema' => [
-                'properties' => [
-                    'key' => [
-                        'some value',
-                    ],
-                ],
-            ],
-        ];
-
-        $value = (object) [
-            'key' => 'value',
-        ];
-
-        $reflectedCaster = new ReflectionClass(Caster::class);
-        $reflectedFormatObject = $reflectedCaster->getMethod('formatObject');
-        $reflectedFormatObject->setAccessible(true);
-
-        $caster = $this->getMockBuilder(Caster::class)
-            ->setMethods([ 'castType' ])
-            ->getMock();
-        $caster->expects($this->once())
-            ->method('castType')
-            ->with($value->key, $parameter['schema']['properties']['key'])
-            ->willReturn('value');
-
-        $result = $reflectedFormatObject->invokeArgs(
-            $caster,
-            [
-                json_encode($value),
                 $parameter,
             ]
         );
@@ -746,7 +707,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
             ],
         ];
 
-        $value = (object) [
+        $value = [
             'key' => 'value',
         ];
 
@@ -759,13 +720,13 @@ class CasterTest extends PHPUnit_Framework_TestCase
             ->getMock();
         $caster->expects($this->once())
             ->method('castType')
-            ->with($value->key, $parameter['properties']['key'])
+            ->with($value['key'], $parameter['properties']['key'])
             ->willReturn('value');
 
         $result = $reflectedFormatObject->invokeArgs(
             $caster,
             [
-                json_encode($value),
+                $value,
                 $parameter,
             ]
         );
@@ -777,7 +738,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
     {
         $parameter = [];
 
-        $value = (object) [
+        $value = [
             'key' => 'value',
         ];
 
@@ -802,28 +763,6 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($value, $result);
     }
 
-    /**
-     * @expectedException AvalancheDevelopment\Peel\HttpError\BadRequest
-     * @expectedExceptionMessage Bad json object passed in as parameter
-     */
-    public function testFormatObjectBailsOnBadObject()
-    {
-        $value = 'some string';
-
-        $reflectedCaster = new ReflectionClass(Caster::class);
-        $reflectedFormatObject = $reflectedCaster->getMethod('formatObject');
-        $reflectedFormatObject->setAccessible(true);
-
-        $caster = new Caster;
-        $reflectedFormatObject->invokeArgs(
-            $caster,
-            [
-                $value,
-                [],
-            ]
-        );
-    }
-
     public function testFormatObjectHandlesPartialDefinition()
     {
         $parameter = [
@@ -834,7 +773,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
             ],
         ];
 
-        $value = (object) [
+        $value = [
             'key' => 'value',
         ];
 
@@ -847,7 +786,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
             ->getMock();
         $caster->expects($this->once())
             ->method('castType')
-            ->with($value->key, $parameter['properties']['key'])
+            ->with($value['key'], $parameter['properties']['key'])
             ->willReturn('value');
 
         $result = $reflectedFormatObject->invokeArgs(

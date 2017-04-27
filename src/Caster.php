@@ -122,20 +122,13 @@ class Caster implements LoggerAwareInterface
     }
 
     /**
-     * @param string $value
+     * @param array $value
      * @param array $parameter
      * @return object
      */
-    protected function formatObject($value, array $parameter)
+    protected function formatObject(array $value, array $parameter)
     {
         $object = $value;
-        if (!is_object($object)) {
-            $object = (string) $object;
-            $object = json_decode($object);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new BadRequest('Bad json object passed in as parameter');
-            }
-        }
 
         $schema = array_key_exists('schema', $parameter) ? $parameter['schema'] : $parameter;
         if (empty($schema['properties'])) {
@@ -144,7 +137,7 @@ class Caster implements LoggerAwareInterface
         $properties = $schema['properties'];
 
         foreach ($object as $key => $attribute) {
-            $object->{$key} = $this->castType($attribute, $properties[$key]);
+            $object[$key] = $this->castType($attribute, $properties[$key]);
         }
 
         return $object;
