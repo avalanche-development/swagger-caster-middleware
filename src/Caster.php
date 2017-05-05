@@ -40,7 +40,7 @@ class Caster implements LoggerAwareInterface
 
         $result = $next($request, $response);
 
-        $result = $this->castResponseBody($request, $response);
+        $result = $this->castResponseBody($request, $result);
         $this->log('finished');
         return $result;
     }
@@ -187,6 +187,35 @@ class Caster implements LoggerAwareInterface
      */
     protected function castResponseBody(Request $request, Response $response)
     {
+        $hasJsonProduce = array_filter(
+            $request->getAttribute('swagger')->getProduces(),
+            function ($produceHeader) {
+                return preg_match('/application\/json/i', $produceHeader) > 0;
+            }
+        );
+
+        if (count($hasJsonProduce) < 1) {
+            return $response;
+        }
+
+        $responseCode = $response->getStatusCode();
+        $responseSchemas = $request->getAttribute('swagger')->getResponses();
+        if (array_key_exists($responseCode, $responseSchemas)) {
+            $schema = $responseSchemas[$responseCode];
+        } else if (array_key_exists('default', $responseSchemas)) {
+            $schema = $responseSchemas['default'];
+        } else {
+            throw new Exception('Could not detect proper response schema');
+        }
+
+        $body = (string) $response->getBody();
+        $body = json_decode($body, true);
+        $body = $this->formatObject($body, $schema);
+        $body = json_encode($body);
+
+        $response->getBody()->attach('php://memory', 'wb+');
+        $response->getBody()->write($body);
+
         return $response;
     }
 
