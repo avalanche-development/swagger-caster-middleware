@@ -2,69 +2,119 @@
 
 namespace AvalancheDevelopment\SwaggerCasterMiddleware;
 
-use AvalancheDevelopment\Peel\HttpError\BadRequest;
-use AvalancheDevelopment\SwaggerRouterMiddleware\ParsedSwaggerInterface;
 use DateTime;
 use Exception;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\NullLogger;
 
-class Caster implements LoggerAwareInterface
+class BodyEncoder
 {
 
-    use LoggerAwareTrait;
-
-    /** @param BodyEncoder $bodyEncoder */
-    protected $bodyEncoder;
-
-    public function __construct()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return Response $response
+     */
+    public function __invoke(Request $request, Response $response)
     {
-        $this->logger = new NullLogger;
-        $this->bodyEncoder = new BodyEncoder;
+        $body = (string) $response->getBody();
+        $responseSchema = $this->getResponseSchema($request, $response);
+        $produces = $request->getAttribute('swagger')->getProduces();
+
+        $encodedBody = $this->encodeBody($body, $responseSchema, $produces);
+
+        $response->getBody()->attach('php://memory', 'wb+');
+        $response->getBody()->write($encodedBody);
+
+        return $response;
     }
 
     /**
      * @param Request $request
      * @param Response $response
-     * @param callable $next
-     * @return ResponseInterface $response
+     * @return array
      */
-    public function __invoke(Request $request, Response $response, callable $next)
+    protected function getResponseSchema(Request $request, Response $response)
     {
-        if (!$request->getAttribute('swagger')) {
-            $this->log('no swagger information found in request, skipping');
-            return $next($request, $response);
+        $responseCode = $response->getStatusCode();
+        $responseSchemas = $request->getAttribute('swagger')->getResponses();
+        if (array_key_exists($responseCode, $responseSchemas)) {
+            return $responseSchemas[$responseCode];
+        }
+        if (array_key_exists('default', $responseSchemas)) {
+            return $responseSchemas['default'];
         }
 
-        $updatedSwagger = $this->updateSwaggerParams($request->getAttribute('swagger'));
-        $request = $request->withAttribute('swagger', $updatedSwagger);
-
-        $result = $next($request, $response);
-
-        $result = $this->bodyEncoder->__invoke($request, $result);
-        $this->log('finished');
-        return $result;
+        throw new Exception('Could not detect proper response schema');
     }
 
     /**
-     * @param ParsedSwaggerInterface $swagger
-     * @return ParsedSwaggerInterface
+     * @param string $body
+     * @param array $schema
+     * @param array $produces
+     * @return string
      */
-    protected function updateSwaggerParams(ParsedSwaggerInterface $swagger)
+    protected function encodeBody($body, array $schema, array $produces)
     {
-        $updatedParams = [];
-        foreach ($swagger->getParams() as $key => $param) {
-            $updatedParam = array_merge($param, [
-                'originalValue' => $param['value'],
-                'value' => $this->castType($param['value'], $param),
-            ]);
-            $updatedParams[$key] = $updatedParam;
+        $produces = $request->getAttribute('swagger')->getProduces();
+        $producesJson = array_filter($produces, [ $this, 'checkJsonType' ]);
+        if (count($producesJson) > 0) {
+            return $this->encodeJson($body, $schema);
         }
-        $swagger->setParams($updatedParams);
-        return $swagger;
+
+        return $body;
+    }
+
+    /**
+     * @param string $type
+     */
+    protected function checkJsonType($type)
+    {
+        return preg_match('/application\/json/i', $type) > 0;
+    }
+
+    /**
+     * @param string $body
+     * @param array $schema
+     * @return string
+     */
+    protected function formatJson($body, array $schema)
+    {
+        $body = json_decode($body, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Could not decode json response body');
+        }
+
+        $body = $this->formatObject($body, $schema);
+
+        $body = json_encode($body);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Could not encode json response body');
+        }
+
+        return $body;
+    }
+
+    /**
+     * @param array $value
+     * @param array $parameter
+     * @return object
+     */
+    protected function formatObject(array $value, array $parameter)
+    {
+        $object = $value;
+
+        $schema = array_key_exists('schema', $parameter) ? $parameter['schema'] : $parameter;
+        if (empty($schema['properties'])) {
+            return $object;
+        }
+        $properties = $schema['properties'];
+
+        foreach ($object as $key => $attribute) {
+            $object[$key] = $this->castType($attribute, $properties[$key]);
+        }
+
+        return $object;
     }
 
     /**
@@ -130,28 +180,6 @@ class Caster implements LoggerAwareInterface
     }
 
     /**
-     * @param array $value
-     * @param array $parameter
-     * @return object
-     */
-    protected function formatObject(array $value, array $parameter)
-    {
-        $object = $value;
-
-        $schema = array_key_exists('schema', $parameter) ? $parameter['schema'] : $parameter;
-        if (empty($schema['properties'])) {
-            return $object;
-        }
-        $properties = $schema['properties'];
-
-        foreach ($object as $key => $attribute) {
-            $object[$key] = $this->castType($attribute, $properties[$key]);
-        }
-
-        return $object;
-    }
-
-    /**
      * @param string $value
      * @param array $parameter
      * @return mixed
@@ -162,6 +190,7 @@ class Caster implements LoggerAwareInterface
             return $value;
         }
 
+        // todo flip-flop datetime processing
         switch ($parameter['format']) {
             case 'date':
                 $value = DateTime::createFromFormat('Y-m-d', $value);
@@ -182,13 +211,5 @@ class Caster implements LoggerAwareInterface
         }
 
         return $value;
-    }
-
-    /**
-     * @param string $message
-     */
-    protected function log($message)
-    {
-        $this->logger->debug("swagger-caster-middleware: {$message}");
     }
 }
