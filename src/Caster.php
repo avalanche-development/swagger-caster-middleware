@@ -6,8 +6,8 @@ use AvalancheDevelopment\Peel\HttpError\BadRequest;
 use AvalancheDevelopment\SwaggerRouterMiddleware\ParsedSwaggerInterface;
 use DateTime;
 use Exception;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
@@ -23,12 +23,12 @@ class Caster implements LoggerAwareInterface
     }
 
     /**
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
+     * @param Request $request
+     * @param Response $response
      * @param callable $next
      * @return ResponseInterface $response
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
+    public function __invoke(Request $request, Response $response, callable $next)
     {
         if (!$request->getAttribute('swagger')) {
             $this->log('no swagger information found in request, skipping');
@@ -38,7 +38,11 @@ class Caster implements LoggerAwareInterface
         $updatedSwagger = $this->updateSwaggerParams($request->getAttribute('swagger'));
         $request = $request->withAttribute('swagger', $updatedSwagger);
 
-        return $next($request, $response);
+        $result = $next($request, $response);
+
+        $result = $this->castResponseBody($request, $response);
+        $this->log('finished');
+        return $result;
     }
 
     /**
@@ -174,6 +178,16 @@ class Caster implements LoggerAwareInterface
         }
 
         return $value;
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return Response $response
+     */
+    protected function castResponseBody(Request $request, Response $response)
+    {
+        return $response;
     }
 
     /**
