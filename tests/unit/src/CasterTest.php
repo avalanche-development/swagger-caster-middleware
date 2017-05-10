@@ -2,6 +2,7 @@
 
 namespace AvalancheDevelopment\SwaggerCasterMiddleware;
 
+use AvalancheDevelopment\SwaggerCasterMiddleware\Body\Encoder as BodyEncoder;
 use AvalancheDevelopment\SwaggerRouterMiddleware\ParsedSwaggerInterface;
 use DateTime;
 use Exception;
@@ -32,6 +33,14 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $this->assertAttributeEquals($logger, 'logger', $caster);
     }
 
+    public function testConstructSetsBodyEncoder()
+    {
+        $bodyEncoder = new BodyEncoder;
+        $caster = new Caster;
+
+        $this->assertAttributeEquals($bodyEncoder, 'bodyEncoder', $caster);
+    }
+
     public function testInvokeBailsIfNoSwaggerFound()
     {
         $mockRequest = $this->createMock(Request::class);
@@ -48,13 +57,10 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $caster = $this->getMockBuilder(Caster::class)
             ->disableOriginalConstructor()
             ->setMethods([
-                'castResponseBody',
                 'log',
                 'updateSwaggerParams',
             ])
             ->getMock();
-        $caster->expects($this->never())
-            ->method('castResponseBody');
         $caster->expects($this->once())
             ->method('log')
             ->with('no swagger information found in request, skipping');
@@ -84,13 +90,10 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $caster = $this->getMockBuilder(Caster::class)
             ->disableOriginalConstructor()
             ->setMethods([
-                'castResponseBody',
                 'log',
                 'updateSwaggerParams',
             ])
             ->getMock();
-        $caster->expects($this->never())
-            ->method('castResponseBody');
         $caster->expects($this->never())
             ->method('log');
         $caster->expects($this->once())
@@ -122,15 +125,10 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $caster = $this->getMockBuilder(Caster::class)
             ->disableOriginalConstructor()
             ->setMethods([
-                'castResponseBody',
                 'log',
                 'updateSwaggerParams',
             ])
             ->getMock();
-        $caster->expects($this->once())
-            ->method('castResponseBody')
-            ->with($mockRequest, $mockResponse)
-            ->willReturn($mockResponse);
         $caster->expects($this->once())
             ->method('log')
             ->with('finished');
@@ -158,15 +156,10 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $caster = $this->getMockBuilder(Caster::class)
             ->disableOriginalConstructor()
             ->setMethods([
-                'castResponseBody',
                 'log',
                 'updateSwaggerParams',
             ])
             ->getMock();
-        $caster->expects($this->once())
-            ->method('castResponseBody')
-            ->with($mockRequest, $mockResponse)
-            ->willReturn($mockResponse);
         $caster->expects($this->once())
             ->method('log')
             ->with('finished');
@@ -180,6 +173,8 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testInvokePassesResponseThroughBodyCaster()
     {
+        $this->markTestIncomplete();
+
         $mockSwagger = $this->createMock(ParsedSwaggerInterface::class);
 
         $mockRequest = $this->createMock(Request::class);
@@ -198,15 +193,10 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $caster = $this->getMockBuilder(Caster::class)
             ->disableOriginalConstructor()
             ->setMethods([
-                'castResponseBody',
                 'log',
                 'updateSwaggerParams',
             ])
             ->getMock();
-        $caster->expects($this->once())
-            ->method('castResponseBody')
-            ->with($mockRequest, $mockResponse)
-            ->willReturn($mockResponseWithCastBody);
         $caster->expects($this->once())
             ->method('log')
             ->with('finished');

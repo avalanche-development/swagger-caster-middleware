@@ -1,13 +1,13 @@
 <?php
 
-namespace AvalancheDevelopment\SwaggerCasterMiddleware;
+namespace AvalancheDevelopment\SwaggerCasterMiddleware\Body;
 
 use DateTime;
 use Exception;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class BodyEncoder
+class Encoder
 {
 
     /**
@@ -23,6 +23,7 @@ class BodyEncoder
 
         $encodedBody = $this->encodeBody($body, $responseSchema, $produces);
 
+        // todo is there a better way to reset the body
         $response->getBody()->attach('php://memory', 'wb+');
         $response->getBody()->write($encodedBody);
 
@@ -78,7 +79,7 @@ class BodyEncoder
      * @param array $schema
      * @return string
      */
-    protected function formatJson($body, array $schema)
+    protected function encodeJson($body, array $schema)
     {
         $body = json_decode($body, true);
         if (json_last_error() !== JSON_ERROR_NONE) {

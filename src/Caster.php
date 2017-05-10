@@ -3,6 +3,7 @@
 namespace AvalancheDevelopment\SwaggerCasterMiddleware;
 
 use AvalancheDevelopment\Peel\HttpError\BadRequest;
+use AvalancheDevelopment\SwaggerCasterMiddleware\Body\Encoder as BodyEncoder;
 use AvalancheDevelopment\SwaggerRouterMiddleware\ParsedSwaggerInterface;
 use DateTime;
 use Exception;
