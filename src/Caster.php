@@ -3,7 +3,7 @@
 namespace AvalancheDevelopment\SwaggerCasterMiddleware;
 
 use AvalancheDevelopment\Peel\HttpError\BadRequest;
-use AvalancheDevelopment\SwaggerRouterMiddleware\ParsedSwaggerInterface;
+use AvalancheDevelopment\SwaggerRouterMiddleware\ParsedSwaggerInterface as Swagger;
 use DateTime;
 use Exception;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -39,16 +39,17 @@ class Caster implements LoggerAwareInterface
         $request = $request->withAttribute('swagger', $updatedSwagger);
 
         $result = $next($request, $response);
+        $result = $this->castResponseBody($response, $request->getAttribute('swagger'));
 
         $this->log('finished');
         return $result;
     }
 
     /**
-     * @param ParsedSwaggerInterface $swagger
-     * @return ParsedSwaggerInterface
+     * @param Swagger $swagger
+     * @return Swagger
      */
-    protected function updateSwaggerParams(ParsedSwaggerInterface $swagger)
+    protected function updateSwaggerParams(Swagger $swagger)
     {
         $updatedParams = [];
         foreach ($swagger->getParams() as $key => $param) {
@@ -177,6 +178,65 @@ class Caster implements LoggerAwareInterface
         }
 
         return $value;
+    }
+
+    /**
+     * @param Response $response
+     * @param Swagger $swagger
+     * @return Response
+     */
+    protected function castResponseBody(Response $response, Swagger $swagger)
+    {
+        $hasJsonProduce = $this->hasJsonProduce($swagger);
+        if (!$hasJsonProduce) {
+            return $response;
+        }
+
+        $schema = $this->getResponseSchema($response->getStatusCode(), $swagger);
+
+        $body = (string) $response->getBody();
+        $body = json_decode($body, true);
+        $body = $this->castType($body, $schema);
+        $body = json_encode($body);
+
+        $response->getBody()->attach('php://memory', 'wb+');
+        $response->getBody()->write($body);
+
+        return $response;
+    }
+
+    /**
+     * @param Swagger $swagger
+     * @return boolean
+     */
+    protected function hasJsonProduce(Swagger $swagger)
+    {
+        $jsonProduceHeaders = array_filter(
+            $swagger->getProduces(),
+            function ($produceHeader) {
+                return preg_match('/application\/json/i', $produceHeader) > 0;
+            }
+        );
+        return count($jsonProduceHeaders) > 0;
+    }
+
+    /**
+     * @param string $statusCode
+     * @param Swagger $swagger
+     * @return array
+     */
+    protected function getResponseSchema($statusCode, Swagger $swagger)
+    {
+        $responseSchemas = $swagger->getResponses();
+
+        if (array_key_exists($statusCode, $responseSchemas)) {
+            return $responseSchemas[$statusCode]['schema'];
+        }
+        if (array_key_exists('default', $responseSchemas)) {
+            return $responseSchemas['default']['schema'];
+        }
+
+        throw new Exception('Could not detect proper response schema');
     }
 
     /**
