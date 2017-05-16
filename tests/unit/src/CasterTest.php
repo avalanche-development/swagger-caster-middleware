@@ -2,7 +2,6 @@
 
 namespace AvalancheDevelopment\SwaggerCasterMiddleware;
 
-use AvalancheDevelopment\SwaggerCasterMiddleware\Body\Encoder as BodyEncoder;
 use AvalancheDevelopment\SwaggerRouterMiddleware\ParsedSwaggerInterface;
 use DateTime;
 use Exception;
@@ -31,14 +30,6 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $caster = new Caster;
 
         $this->assertAttributeEquals($logger, 'logger', $caster);
-    }
-
-    public function testConstructSetsBodyEncoder()
-    {
-        $bodyEncoder = new BodyEncoder;
-        $caster = new Caster;
-
-        $this->assertAttributeEquals($bodyEncoder, 'bodyEncoder', $caster);
     }
 
     public function testInvokeBailsIfNoSwaggerFound()

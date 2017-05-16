@@ -3,7 +3,6 @@
 namespace AvalancheDevelopment\SwaggerCasterMiddleware;
 
 use AvalancheDevelopment\Peel\HttpError\BadRequest;
-use AvalancheDevelopment\SwaggerCasterMiddleware\Body\Encoder as BodyEncoder;
 use AvalancheDevelopment\SwaggerRouterMiddleware\ParsedSwaggerInterface;
 use DateTime;
 use Exception;
@@ -18,13 +17,9 @@ class Caster implements LoggerAwareInterface
 
     use LoggerAwareTrait;
 
-    /** @param BodyEncoder $bodyEncoder */
-    protected $bodyEncoder;
-
     public function __construct()
     {
         $this->logger = new NullLogger;
-        $this->bodyEncoder = new BodyEncoder;
     }
 
     /**
@@ -45,7 +40,6 @@ class Caster implements LoggerAwareInterface
 
         $result = $next($request, $response);
 
-        $result = $this->bodyEncoder->__invoke($request, $result);
         $this->log('finished');
         return $result;
     }
