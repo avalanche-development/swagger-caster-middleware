@@ -128,7 +128,7 @@ class Caster implements LoggerAwareInterface
     /**
      * @param array $value
      * @param array $parameter
-     * @return object
+     * @return array
      */
     protected function formatObject(array $value, array $parameter)
     {
@@ -197,6 +197,7 @@ class Caster implements LoggerAwareInterface
         $body = (string) $response->getBody();
         $body = json_decode($body, true);
         $body = $this->castType($body, $schema);
+        $body = $this->serializeType($body, $schema);
         $body = json_encode($body);
 
         $response->getBody()->attach('php://memory', 'wb+');
@@ -237,6 +238,82 @@ class Caster implements LoggerAwareInterface
         }
 
         throw new Exception('Could not detect proper response schema');
+    }
+
+    /**
+     * @param mixed $value
+     * @param array $parameter
+     * @return mixed
+     */
+    protected function serializeType($value, array $parameter)
+    {
+        $type = $this->getParameterType($parameter);
+
+        switch ($type) {
+            case 'array':
+                foreach ($value as $key => $row) {
+                    $value[$key] = $this->serializeType($row, $parameter['items']);
+                }
+                break;
+            case 'object':
+                $value = $this->serializeObject($value, $parameter);
+                break;
+            case 'string':
+                $value = $this->serializeString($value, $parameter);
+                break;
+            default:
+                break;
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param array $value
+     * @param array $parameter
+     * @return object
+     */
+    protected function serializeObject(array $value, array $parameter)
+    {
+        $object = $value;
+
+        $schema = array_key_exists('schema', $parameter) ? $parameter['schema'] : $parameter;
+        if (empty($schema['properties'])) {
+            return $object;
+        }
+        $properties = $schema['properties'];
+
+        foreach ($object as $key => $attribute) {
+            $object[$key] = $this->serializeType($attribute, $properties[$key]);
+        }
+
+        return $object;
+    }
+
+    /**
+     * @param mixed $value
+     * @param array $parameter
+     * @return string
+     */
+    protected function serializeString($value, array $parameter)
+    {
+        if (!array_key_exists('format', $parameter)) {
+            return $value;
+        }
+
+        switch ($parameter['format']) {
+            case 'date':
+                $value = $value->format('Y-m-d');
+                break;
+            case 'date-time':
+                $value = $value->format('c');
+                break;
+            default:
+                // this is an open-type property
+                break;
+        }
+
+        return $value;
     }
 
     /**
