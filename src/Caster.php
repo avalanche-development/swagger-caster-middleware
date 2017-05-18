@@ -90,7 +90,10 @@ class Caster implements LoggerAwareInterface
                 $value = (float) $value;
                 break;
             case 'object':
-                $value = $this->formatObject($value, $parameter);
+                $properties = $this->getObjectProperties($parameter);
+                foreach ($properties as $key => $schema) {
+                    $value[$key] = $this->castType($value[$key], $schema);
+                }
                 break;
             case 'string':
                 $value = (string) $value;
@@ -126,25 +129,20 @@ class Caster implements LoggerAwareInterface
     }
 
     /**
-     * @param array $value
      * @param array $parameter
      * @return array
      */
-    protected function formatObject(array $value, array $parameter)
+    protected function getObjectProperties(array $parameter)
     {
-        $object = $value;
-
-        $schema = array_key_exists('schema', $parameter) ? $parameter['schema'] : $parameter;
-        if (empty($schema['properties'])) {
-            return $object;
-        }
-        $properties = $schema['properties'];
-
-        foreach ($object as $key => $attribute) {
-            $object[$key] = $this->castType($attribute, $properties[$key]);
+        $schema = $parameter;
+        if (array_key_exists('schema', $parameter)) {
+            $schema = $parameter['schema'];
         }
 
-        return $object;
+        if (!empty($schema['properties'])) {
+            return $schema['properties'];
+        }
+        return [];
     }
 
     /**
@@ -256,7 +254,10 @@ class Caster implements LoggerAwareInterface
                 }
                 break;
             case 'object':
-                $value = $this->serializeObject($value, $parameter);
+                $properties = $this->getObjectProperties($parameter);
+                foreach ($properties as $key => $schema) {
+                    $value[$key] = $this->serializeType($value[$key], $schema);
+                }
                 break;
             case 'string':
                 $value = $this->serializeString($value, $parameter);
@@ -266,28 +267,6 @@ class Caster implements LoggerAwareInterface
         }
 
         return $value;
-    }
-
-    /**
-     * @param array $value
-     * @param array $parameter
-     * @return object
-     */
-    protected function serializeObject(array $value, array $parameter)
-    {
-        $object = $value;
-
-        $schema = array_key_exists('schema', $parameter) ? $parameter['schema'] : $parameter;
-        if (empty($schema['properties'])) {
-            return $object;
-        }
-        $properties = $schema['properties'];
-
-        foreach ($object as $key => $attribute) {
-            $object[$key] = $this->serializeType($attribute, $properties[$key]);
-        }
-
-        return $object;
     }
 
     /**

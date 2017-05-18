@@ -546,6 +546,8 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testCastTypeHandlesObject()
     {
+        $this->markTestIncomplete('');
+
         $parameter = [
             'some value',
         ];
@@ -558,12 +560,10 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
-            ->setMethods([ 'formatObject', 'getParameterType' ])
+            ->setMethods([
+                'getParameterType',
+            ])
             ->getMock();
-        $caster->expects($this->once())
-            ->method('formatObject')
-            ->with($value, $parameter)
-            ->willReturn($value);
         $caster->expects($this->once())
             ->method('getParameterType')
             ->with($parameter)
@@ -710,148 +710,6 @@ class CasterTest extends PHPUnit_Framework_TestCase
             $caster,
             [[]]
         );
-    }
-
-    public function testFormatObjectHandlesObject()
-    {
-        $parameter = [
-            'schema' => [
-                'properties' => [
-                    'key' => [
-                        'some value',
-                    ],
-                ],
-            ],
-        ];
-
-        $value = [
-            'key' => 'value',
-        ];
-
-        $reflectedCaster = new ReflectionClass(Caster::class);
-        $reflectedFormatObject = $reflectedCaster->getMethod('formatObject');
-        $reflectedFormatObject->setAccessible(true);
-
-        $caster = $this->getMockBuilder(Caster::class)
-            ->setMethods([ 'castType' ])
-            ->getMock();
-        $caster->expects($this->once())
-            ->method('castType')
-            ->with($value['key'], $parameter['schema']['properties']['key'])
-            ->willReturn('value');
-
-        $result = $reflectedFormatObject->invokeArgs(
-            $caster,
-            [
-                $value,
-                $parameter,
-            ]
-        );
-
-        $this->assertEquals($value, $result);
-    }
-
-    public function testFormatObjectHandlesPartiallyDefinedParameter()
-    {
-        $parameter = [
-            'properties' => [
-                'key' => [
-                    'some value',
-                ],
-            ],
-        ];
-
-        $value = [
-            'key' => 'value',
-        ];
-
-        $reflectedCaster = new ReflectionClass(Caster::class);
-        $reflectedFormatObject = $reflectedCaster->getMethod('formatObject');
-        $reflectedFormatObject->setAccessible(true);
-
-        $caster = $this->getMockBuilder(Caster::class)
-            ->setMethods([ 'castType' ])
-            ->getMock();
-        $caster->expects($this->once())
-            ->method('castType')
-            ->with($value['key'], $parameter['properties']['key'])
-            ->willReturn('value');
-
-        $result = $reflectedFormatObject->invokeArgs(
-            $caster,
-            [
-                $value,
-                $parameter,
-            ]
-        );
-
-        $this->assertEquals($value, $result);
-    }
-
-    public function testFormatObjectHandlesUndefinedParameterObject()
-    {
-        $parameter = [];
-
-        $value = [
-            'key' => 'value',
-        ];
-
-        $reflectedCaster = new ReflectionClass(Caster::class);
-        $reflectedFormatObject = $reflectedCaster->getMethod('formatObject');
-        $reflectedFormatObject->setAccessible(true);
-
-        $caster = $this->getMockBuilder(Caster::class)
-            ->setMethods([ 'castType' ])
-            ->getMock();
-        $caster->expects($this->never())
-            ->method('castType');
-
-        $result = $reflectedFormatObject->invokeArgs(
-            $caster,
-            [
-                $value,
-                $parameter,
-            ]
-        );
-
-        $this->assertEquals($value, $result);
-    }
-
-    public function testFormatObjectHandlesPartialDefinition()
-    {
-        $parameter = [
-            'properties' => [
-                'key' => [
-                    'some value',
-                ],
-            ],
-        ];
-
-        $value = [
-            'key' => 'value',
-        ];
-
-        $reflectedCaster = new ReflectionClass(Caster::class);
-        $reflectedFormatObject = $reflectedCaster->getMethod('formatObject');
-        $reflectedFormatObject->setAccessible(true);
-
-        $caster = $this->getMockBuilder(Caster::class)
-            ->setMethods([ 'castType' ])
-            ->getMock();
-        $caster->expects($this->once())
-            ->method('castType')
-            ->with($value['key'], $parameter['properties']['key'])
-            ->willReturn('value');
-
-        $result = $reflectedFormatObject->invokeArgs(
-            $caster,
-            [
-                $value,
-                $parameter,
-            ]
-        );
-
-        $this->assertEquals($value, $result);
     }
 
     public function testFormatStringIgnoresFormatlessParameter()
