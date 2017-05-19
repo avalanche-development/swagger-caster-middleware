@@ -398,6 +398,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
             123,
             456,
         ];
+
         $expectedValue = array_map(function ($row) {
             return (string) $row;
         }, $value);
@@ -408,9 +409,15 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
         $caster = $this->getMockBuilder(Caster::class)
             ->setMethods([
+                'formatString',
+                'getObjectProperties',
                 'getParameterType',
             ])
             ->getMock();
+        $caster->method('formatString')
+            ->will($this->returnArgument(0));
+        $caster->expects($this->never())
+            ->method('getObjectProperties');
         $caster->expects($this->exactly(3))
             ->method('getParameterType')
             ->with($this->isType('array'))
@@ -436,8 +443,16 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
-            ->setMethods([ 'getParameterType' ])
+            ->setMethods([
+                'formatString',
+                'getObjectProperties',
+                'getParameterType',
+            ])
             ->getMock();
+        $caster->expects($this->never())
+            ->method('formatString');
+        $caster->expects($this->never())
+            ->method('getObjectProperties');
         $caster->expects($this->once())
             ->method('getParameterType')
             ->with($parameter)
@@ -466,8 +481,16 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
-            ->setMethods([ 'getParameterType' ])
+            ->setMethods([
+                'formatString',
+                'getObjectProperties',
+                'getParameterType',
+            ])
             ->getMock();
+        $caster->expects($this->never())
+            ->method('formatString');
+        $caster->expects($this->never())
+            ->method('getObjectProperties');
         $caster->expects($this->once())
             ->method('getParameterType')
             ->with($parameter)
@@ -496,8 +519,16 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
-            ->setMethods([ 'getParameterType' ])
+            ->setMethods([
+                'formatString',
+                'getObjectProperties',
+                'getParameterType',
+            ])
             ->getMock();
+        $caster->expects($this->never())
+            ->method('formatString');
+        $caster->expects($this->never())
+            ->method('getObjectProperties');
         $caster->expects($this->once())
             ->method('getParameterType')
             ->with($parameter)
@@ -526,8 +557,16 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
-            ->setMethods([ 'getParameterType' ])
+            ->setMethods([
+                'formatString',
+                'getObjectProperties',
+                'getParameterType',
+            ])
             ->getMock();
+        $caster->expects($this->never())
+            ->method('formatString');
+        $caster->expects($this->never())
+            ->method('getObjectProperties');
         $caster->expects($this->once())
             ->method('getParameterType')
             ->with($parameter)
@@ -546,14 +585,25 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testCastTypeHandlesObject()
     {
-        $this->markTestIncomplete('');
-
         $parameter = [
-            'some value',
+            'some schema',
         ];
         $value = [
-            'key' => 'value',
+            'key1' => 1,
+            'key2' => 2,
         ];
+
+        $renderedSchema = [
+            'key1' => [
+                'type' => 'string',
+            ],
+            'key2' => [
+                'type' => 'string',
+            ],
+        ];
+        $expectedValue = array_map(function ($row) {
+            return (string) $row;
+        }, $value);
 
         $reflectedCaster = new ReflectionClass(Caster::class);
         $reflectedCastType = $reflectedCaster->getMethod('castType');
@@ -561,13 +611,21 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
         $caster = $this->getMockBuilder(Caster::class)
             ->setMethods([
+                'formatString',
+                'getObjectProperties',
                 'getParameterType',
             ])
             ->getMock();
+        $caster->method('formatString')
+            ->will($this->returnArgument(0));
         $caster->expects($this->once())
-            ->method('getParameterType')
+            ->method('getObjectProperties')
             ->with($parameter)
-            ->willReturn('object');
+            ->willReturn($renderedSchema);
+        $caster->expects($this->exactly(3))
+            ->method('getParameterType')
+            ->with($this->isType('array'))
+            ->will($this->onConsecutiveCalls('object', 'string', 'string'));
 
         $result = $reflectedCastType->invokeArgs(
             $caster,
@@ -577,7 +635,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
             ]
         );
 
-        $this->assertEquals($value, $result);
+        $this->assertSame($expectedValue, $result);
     }
 
     public function testCastTypeHandlesString()
@@ -592,12 +650,18 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
-            ->setMethods([ 'formatString', 'getParameterType' ])
+            ->setMethods([
+                'formatString',
+                'getObjectProperties',
+                'getParameterType',
+            ])
             ->getMock();
         $caster->expects($this->once())
             ->method('formatString')
             ->with($value, $parameter)
             ->will($this->returnArgument(0));
+        $caster->expects($this->never())
+            ->method('getObjectProperties');
         $caster->expects($this->once())
             ->method('getParameterType')
             ->with($parameter)
@@ -629,8 +693,16 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
-            ->setMethods([ 'getParameterType' ])
+            ->setMethods([
+                'formatString',
+                'getObjectProperties',
+                'getParameterType',
+            ])
             ->getMock();
+        $caster->expects($this->never())
+            ->method('formatString');
+        $caster->expects($this->never())
+            ->method('getObjectProperties');
         $caster->expects($this->once())
             ->method('getParameterType')
             ->with($parameter)
