@@ -983,6 +983,101 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $this->assertSame($value, $result);
     }
 
+    public function testCastResponseBodyBailsIfNotJson()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testCastResponseBodyPullsSchemaFromSwagger()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testCastResponseBodyBailsIfJsonDecodeFails()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testCastResponseBodyPassesBodyThroughCastType()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testCastResponseBodyPassesBodyThroughSerializeType()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testCastResponseBodyBailsIfJsonEncodeFails()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testHasJsonProduceReturnsTrueIfJsonHeader()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testHasJsonProduceReturnsFalseIfNoJsonHeader()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testGetResponseSchemaReturnsStatusCodeSchema()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testGetResponseSchemaReturnsDefaultSchema()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testGetResponseSchemaThrowsExceptionIfNoSchemaFound()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testSerializeTypeHandlesArray()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testSerializeTypeHandlesObject()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testSerializeTypeHandlesString()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testSerializeTypeIgnoresOtherTypes()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testSerializeStringIgnoresIfNoFormat()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testSerializeStringHandlesDate()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testSerializeStringHandlesDateTime()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testSerializeStringIgnoresOtherTypes()
+    {
+        $this->markTestIncomplete();
+    }
+
     public function testLog()
     {
         $message = 'test debug message';
