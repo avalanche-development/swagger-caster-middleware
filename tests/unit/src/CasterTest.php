@@ -784,6 +784,79 @@ class CasterTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    public function testGetObjectPropertiesUsesDefaultProperties()
+    {
+        $properties = [
+            'some property',
+            'some other property',
+        ];
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedGetObjectProperties = $reflectedCaster->getMethod('getObjectProperties');
+        $reflectedGetObjectProperties->setAccessible(true);
+
+        $caster = new Caster;
+        $result = $reflectedGetObjectProperties->invokeArgs(
+            $caster,
+            [
+                [
+                    'properties' => $properties,
+                ],
+            ]
+        );
+
+        $this->assertEquals($properties, $result);
+    }
+
+    public function testGetObjectPropertiesUsesSchemaProperties()
+    {
+        $schemaProperties = [
+            'some property',
+            'some other property',
+        ];
+        $defaultProperties = [
+            'bad property',
+        ];
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedGetObjectProperties = $reflectedCaster->getMethod('getObjectProperties');
+        $reflectedGetObjectProperties->setAccessible(true);
+
+        $caster = new Caster;
+        $result = $reflectedGetObjectProperties->invokeArgs(
+            $caster,
+            [
+                [
+                    'properties' => $defaultProperties,
+                    'schema' => [
+                        'properties' => $schemaProperties,
+                    ],
+                ],
+            ]
+        );
+
+        $this->assertEquals($schemaProperties, $result);
+    }
+
+    public function testGetObjectPropertiesHandlesEmptyProperties()
+    {
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedGetObjectProperties = $reflectedCaster->getMethod('getObjectProperties');
+        $reflectedGetObjectProperties->setAccessible(true);
+
+        $caster = new Caster;
+        $result = $reflectedGetObjectProperties->invokeArgs(
+            $caster,
+            [
+                [
+                    'properties' => [],
+                ],
+            ]
+        );
+
+        $this->assertSame([], $result);
+    }
+
     public function testFormatStringIgnoresFormatlessParameter()
     {
         $value = 'some string';
