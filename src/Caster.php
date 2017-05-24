@@ -6,11 +6,11 @@ use AvalancheDevelopment\Peel\HttpError\BadRequest;
 use AvalancheDevelopment\SwaggerRouterMiddleware\ParsedSwaggerInterface as Swagger;
 use DateTime;
 use Exception;
-use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
+use Zend\Diactoros\Response;
 
 class Caster implements LoggerAwareInterface
 {
@@ -194,9 +194,16 @@ class Caster implements LoggerAwareInterface
 
         $body = (string) $response->getBody();
         $body = json_decode($body, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Error encountered when trying to decode json body');
+        }
+
         $body = $this->castType($body, $schema);
         $body = $this->serializeType($body, $schema);
         $body = json_encode($body);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception('Error encountered when trying to encode json body');
+        }
 
         $response->getBody()->attach('php://memory', 'wb+');
         $response->getBody()->write($body);
