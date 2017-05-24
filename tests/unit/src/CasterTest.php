@@ -7,12 +7,13 @@ use DateTime;
 use Exception;
 use PHPUnit_Framework_TestCase;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\UploadedFileInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use ReflectionClass;
+use Zend\Diactoros\Response;
+use Zend\Diactoros\Stream;
 
 class CasterTest extends PHPUnit_Framework_TestCase
 {
@@ -985,32 +986,341 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testCastResponseBodyBailsIfNotJson()
     {
-        $this->markTestIncomplete();
+        $mockResponse = $this->createMock(Response::class);
+        $mockSwagger = $this->createMock(Swagger::class);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedCastResponseBody = $reflectedCaster->getMethod('castResponseBody');
+        $reflectedCastResponseBody->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->setMethods([
+                'castType',
+                'getResponseSchema',
+                'hasJsonProduce',
+                'serializeType',
+            ])
+            ->getMock();
+        $caster->expects($this->never())
+            ->method('castType');
+        $caster->expects($this->never())
+            ->method('getResponseSchema');
+        $caster->expects($this->once())
+            ->method('hasJsonProduce')
+            ->with($mockSwagger)
+            ->willReturn(false);
+        $caster->expects($this->never())
+            ->method('serializeType');
+
+        $result = $reflectedCastResponseBody->invokeArgs(
+            $caster,
+            [
+                $mockResponse,
+                $mockSwagger,
+            ]
+        );
+
+        $this->assertSame($result, $mockResponse);
     }
 
     public function testCastResponseBodyPullsSchemaFromSwagger()
     {
-        $this->markTestIncomplete();
+        $mockBody = [
+            'key' => 'some body',
+        ];
+        $mockSchema = [
+            'some schema',
+        ];
+        $mockStatusCode = 200;
+
+        $mockStream = $this->createMock(Stream::class);
+        $mockStream->method('__toString')
+            ->willReturn(json_encode($mockBody));
+
+        $mockResponse = $this->createMock(Response::class);
+        $mockResponse->expects($this->once())
+            ->method('getStatusCode')
+            ->willReturn($mockStatusCode);
+        $mockResponse->method('getBody')
+            ->willReturn($mockStream);
+
+        $mockSwagger = $this->createMock(Swagger::class);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedCastResponseBody = $reflectedCaster->getMethod('castResponseBody');
+        $reflectedCastResponseBody->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->setMethods([
+                'castType',
+                'getResponseSchema',
+                'hasJsonProduce',
+                'serializeType',
+            ])
+            ->getMock();
+        $caster->expects($this->once())
+            ->method('castType')
+            ->with($mockBody, $mockSchema)
+            ->will($this->returnArgument(0));
+        $caster->expects($this->once())
+            ->method('getResponseSchema')
+            ->with($mockStatusCode, $mockSwagger)
+            ->willReturn($mockSchema);
+        $caster->method('hasJsonProduce')
+            ->willReturn(true);
+        $caster->expects($this->once())
+            ->method('serializeType')
+            ->with($mockBody, $mockSchema)
+            ->will($this->returnArgument(0));
+
+        $result = $reflectedCastResponseBody->invokeArgs(
+            $caster,
+            [
+                $mockResponse,
+                $mockSwagger,
+            ]
+        );
+
+        $this->assertSame($result, $mockResponse);
     }
 
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage Error encountered when trying to decode json body
+     */
     public function testCastResponseBodyBailsIfJsonDecodeFails()
     {
-        $this->markTestIncomplete();
+        $mockBody = 'some body';
+        $mockSchema = [
+            'some schema',
+        ];
+        $mockStatusCode = 200;
+
+        $mockStream = $this->createMock(Stream::class);
+        $mockStream->method('__toString')
+            ->willReturn($mockBody);
+
+        $mockResponse = $this->createMock(Response::class);
+        $mockResponse->expects($this->once())
+            ->method('getStatusCode')
+            ->willReturn($mockStatusCode);
+        $mockResponse->method('getBody')
+            ->willReturn($mockStream);
+
+        $mockSwagger = $this->createMock(Swagger::class);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedCastResponseBody = $reflectedCaster->getMethod('castResponseBody');
+        $reflectedCastResponseBody->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->setMethods([
+                'castType',
+                'getResponseSchema',
+                'hasJsonProduce',
+                'serializeType',
+            ])
+            ->getMock();
+        $caster->expects($this->never())
+            ->method('castType');
+        $caster->method('getResponseSchema')
+            ->willReturn($mockSchema);
+        $caster->method('hasJsonProduce')
+            ->willReturn(true);
+        $caster->expects($this->never())
+            ->method('serializeType');
+
+        $reflectedCastResponseBody->invokeArgs(
+            $caster,
+            [
+                $mockResponse,
+                $mockSwagger,
+            ]
+        );
     }
 
     public function testCastResponseBodyPassesBodyThroughCastType()
     {
-        $this->markTestIncomplete();
+        $mockBody = [
+            'key' => 'some body',
+        ];
+        $mockCastBody = [
+            'key' => 'some cast body',
+        ];
+        $mockSchema = [
+            'some schema',
+        ];
+        $mockStatusCode = 200;
+
+        $mockStream = $this->createMock(Stream::class);
+        $mockStream->method('__toString')
+            ->willReturn(json_encode($mockBody));
+
+        $mockResponse = $this->createMock(Response::class);
+        $mockResponse->expects($this->once())
+            ->method('getStatusCode')
+            ->willReturn($mockStatusCode);
+        $mockResponse->method('getBody')
+            ->willReturn($mockStream);
+
+        $mockSwagger = $this->createMock(Swagger::class);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedCastResponseBody = $reflectedCaster->getMethod('castResponseBody');
+        $reflectedCastResponseBody->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->setMethods([
+                'castType',
+                'getResponseSchema',
+                'hasJsonProduce',
+                'serializeType',
+            ])
+            ->getMock();
+        $caster->method('castType')
+            ->willReturn($mockCastBody);
+        $caster->method('getResponseSchema')
+            ->willReturn($mockSchema);
+        $caster->method('hasJsonProduce')
+            ->willReturn(true);
+        $caster->expects($this->once())
+            ->method('serializeType')
+            ->with($mockCastBody, $mockSchema)
+            ->will($this->returnArgument(0));
+
+        $result = $reflectedCastResponseBody->invokeArgs(
+            $caster,
+            [
+                $mockResponse,
+                $mockSwagger,
+            ]
+        );
+
+        $this->assertSame($result, $mockResponse);
     }
 
     public function testCastResponseBodyPassesBodyThroughSerializeType()
     {
-        $this->markTestIncomplete();
+        $mockBody = [
+            'key' => 'some body',
+        ];
+        $mockSerializedBody = [
+            'key' => 'some serialized body',
+        ];
+        $mockSchema = [
+            'some schema',
+        ];
+        $mockStatusCode = 200;
+
+        $mockStream = $this->createMock(Stream::class);
+        $mockStream->method('__toString')
+            ->willReturn(json_encode($mockBody));
+        $mockStream->expects($this->once())
+            ->method('write')
+            ->with(json_encode($mockSerializedBody));
+
+        $mockResponse = $this->createMock(Response::class);
+        $mockResponse->expects($this->once())
+            ->method('getStatusCode')
+            ->willReturn($mockStatusCode);
+        $mockResponse->method('getBody')
+            ->willReturn($mockStream);
+
+        $mockSwagger = $this->createMock(Swagger::class);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedCastResponseBody = $reflectedCaster->getMethod('castResponseBody');
+        $reflectedCastResponseBody->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->setMethods([
+                'castType',
+                'getResponseSchema',
+                'hasJsonProduce',
+                'serializeType',
+            ])
+            ->getMock();
+        $caster->method('castType')
+            ->with($mockBody, $mockSchema)
+            ->will($this->returnArgument(0));
+        $caster->method('getResponseSchema')
+            ->willReturn($mockSchema);
+        $caster->method('hasJsonProduce')
+            ->willReturn(true);
+        $caster->expects($this->once())
+            ->method('serializeType')
+            ->with($mockBody, $mockSchema)
+            ->willReturn($mockSerializedBody);
+
+        $result = $reflectedCastResponseBody->invokeArgs(
+            $caster,
+            [
+                $mockResponse,
+                $mockSwagger,
+            ]
+        );
+
+        $this->assertSame($result, $mockResponse);
     }
 
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage Error encountered when trying to encode json body
+     */
     public function testCastResponseBodyBailsIfJsonEncodeFails()
     {
-        $this->markTestIncomplete();
+        $mockBody = [
+            'key' => 'some body',
+        ];
+        $mockBadBody = "\xB1\x31";
+        $mockSchema = [
+            'some schema',
+        ];
+        $mockStatusCode = 200;
+
+        $mockStream = $this->createMock(Stream::class);
+        $mockStream->method('__toString')
+            ->willReturn(json_encode($mockBody));
+
+        $mockResponse = $this->createMock(Response::class);
+        $mockResponse->expects($this->once())
+            ->method('getStatusCode')
+            ->willReturn($mockStatusCode);
+        $mockResponse->method('getBody')
+            ->willReturn($mockStream);
+
+        $mockSwagger = $this->createMock(Swagger::class);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedCastResponseBody = $reflectedCaster->getMethod('castResponseBody');
+        $reflectedCastResponseBody->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->setMethods([
+                'castType',
+                'getResponseSchema',
+                'hasJsonProduce',
+                'serializeType',
+            ])
+            ->getMock();
+        $caster->method('castType')
+            ->with($mockBody, $mockSchema)
+            ->will($this->returnArgument(0));
+        $caster->method('getResponseSchema')
+            ->willReturn($mockSchema);
+        $caster->method('hasJsonProduce')
+            ->willReturn(true);
+        $caster->method('serializeType')
+            ->with($mockBody, $mockSchema)
+            ->willReturn($mockBadBody);
+
+        $reflectedCastResponseBody->invokeArgs(
+            $caster,
+            [
+                $mockResponse,
+                $mockSwagger,
+            ]
+        );
     }
 
     public function testHasJsonProduceReturnsTrueIfJsonHeader()
