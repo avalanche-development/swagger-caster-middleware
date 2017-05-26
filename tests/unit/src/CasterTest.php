@@ -409,6 +409,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'formatString',
                 'getObjectProperties',
@@ -444,6 +445,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'formatString',
                 'getObjectProperties',
@@ -482,6 +484,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'formatString',
                 'getObjectProperties',
@@ -520,6 +523,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'formatString',
                 'getObjectProperties',
@@ -558,6 +562,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'formatString',
                 'getObjectProperties',
@@ -611,6 +616,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'formatString',
                 'getObjectProperties',
@@ -651,6 +657,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'formatString',
                 'getObjectProperties',
@@ -694,6 +701,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastType->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'formatString',
                 'getObjectProperties',
@@ -994,6 +1002,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastResponseBody->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'castType',
                 'getResponseSchema',
@@ -1051,6 +1060,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastResponseBody->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'castType',
                 'getResponseSchema',
@@ -1114,6 +1124,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastResponseBody->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'castType',
                 'getResponseSchema',
@@ -1170,6 +1181,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastResponseBody->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'castType',
                 'getResponseSchema',
@@ -1233,6 +1245,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastResponseBody->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'castType',
                 'getResponseSchema',
@@ -1296,6 +1309,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
         $reflectedCastResponseBody->setAccessible(true);
 
         $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
             ->setMethods([
                 'castType',
                 'getResponseSchema',
@@ -1325,27 +1339,154 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testHasJsonProduceReturnsTrueIfJsonHeader()
     {
-        $this->markTestIncomplete();
+        $mockSwagger = $this->createMock(Swagger::class);
+        $mockSwagger->method('getProduces')
+            ->willReturn([
+                'application/json',
+            ]);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedHasJsonProduce = $reflectedCaster->getMethod('hasJsonProduce');
+        $reflectedHasJsonProduce->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods(null)
+            ->getMock();
+
+        $result = $reflectedHasJsonProduce->invokeArgs(
+            $caster,
+            [
+                $mockSwagger,
+            ]
+        );
+
+        $this->assertTrue($result);
     }
 
     public function testHasJsonProduceReturnsFalseIfNoJsonHeader()
     {
-        $this->markTestIncomplete();
+        $mockSwagger = $this->createMock(Swagger::class);
+        $mockSwagger->method('getProduces')
+            ->willReturn([
+                'application/text',
+            ]);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedHasJsonProduce = $reflectedCaster->getMethod('hasJsonProduce');
+        $reflectedHasJsonProduce->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods(null)
+            ->getMock();
+
+        $result = $reflectedHasJsonProduce->invokeArgs(
+            $caster,
+            [
+                $mockSwagger,
+            ]
+        );
+
+        $this->assertFalse($result);
     }
 
     public function testGetResponseSchemaReturnsStatusCodeSchema()
     {
-        $this->markTestIncomplete();
+        $mockSwagger = $this->createMock(Swagger::class);
+        $mockSwagger->method('getResponses')
+            ->willReturn([
+                '200' => [
+                    'schema' => 'status code schema',
+                ],
+                'default' => [
+                    'schema' => 'default schema',
+                ],
+            ]);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedGetResponseSchema = $reflectedCaster->getMethod('getResponseSchema');
+        $reflectedGetResponseSchema->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods(null)
+            ->getMock();
+
+        $result = $reflectedGetResponseSchema->invokeArgs(
+            $caster,
+            [
+                '200',
+                $mockSwagger,
+            ]
+        );
+
+        $this->assertEquals('status code schema', $result);
     }
 
     public function testGetResponseSchemaReturnsDefaultSchema()
     {
-        $this->markTestIncomplete();
+        $mockSwagger = $this->createMock(Swagger::class);
+        $mockSwagger->method('getResponses')
+            ->willReturn([
+                '200' => [
+                    'schema' => 'status code schema',
+                ],
+                'default' => [
+                    'schema' => 'default schema',
+                ],
+            ]);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedGetResponseSchema = $reflectedCaster->getMethod('getResponseSchema');
+        $reflectedGetResponseSchema->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods(null)
+            ->getMock();
+
+        $result = $reflectedGetResponseSchema->invokeArgs(
+            $caster,
+            [
+                '400',
+                $mockSwagger,
+            ]
+        );
+
+        $this->assertEquals('default schema', $result);
     }
 
+    /**
+     * @expectedException Exception
+     * @expectedExceptionMessage Could not detect proper response schema
+     */
     public function testGetResponseSchemaThrowsExceptionIfNoSchemaFound()
     {
-        $this->markTestIncomplete();
+        $mockSwagger = $this->createMock(Swagger::class);
+        $mockSwagger->method('getResponses')
+            ->willReturn([
+                '200' => [
+                    'schema' => 'status code schema',
+                ],
+            ]);
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedGetResponseSchema = $reflectedCaster->getMethod('getResponseSchema');
+        $reflectedGetResponseSchema->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods(null)
+            ->getMock();
+
+        $reflectedGetResponseSchema->invokeArgs(
+            $caster,
+            [
+                '400',
+                $mockSwagger,
+            ]
+        );
     }
 
     public function testSerializeTypeHandlesArray()
