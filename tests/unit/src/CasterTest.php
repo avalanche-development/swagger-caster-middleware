@@ -1491,42 +1491,283 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
     public function testSerializeTypeHandlesArray()
     {
-        $this->markTestIncomplete();
+        $parameter = [
+            'items' => [
+                'type' => 'string',
+            ],
+        ];
+        $value = [
+            '123',
+            '456',
+        ];
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedSerializeType = $reflectedCaster->getMethod('serializeType');
+        $reflectedSerializeType->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'getObjectProperties',
+                'getParameterType',
+                'serializeString',
+            ])
+            ->getMock();
+        $caster->expects($this->never())
+            ->method('getObjectProperties');
+        $caster->expects($this->exactly(3))
+            ->method('getParameterType')
+            ->with($this->isType('array'))
+            ->will($this->onConsecutiveCalls('array', 'string', 'string'));
+        $caster->expects($this->exactly(2))
+            ->method('serializeString')
+            ->will($this->returnArgument(0));
+
+        $result = $reflectedSerializeType->invokeArgs($caster, [
+            $value,
+            $parameter,
+        ]);
+
+        $this->assertSame($value, $result);
     }
 
     public function testSerializeTypeHandlesObject()
     {
-        $this->markTestIncomplete();
+        $parameter = [
+            'some schema',
+        ];
+        $value = [
+            'key1' => '1',
+            'key2' => '2',
+        ];
+
+        $renderedSchema = [
+            'key1' => [
+                'type' => 'string',
+            ],
+            'key2' => [
+                'type' => 'string',
+            ],
+        ];
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedSerializeType = $reflectedCaster->getMethod('serializeType');
+        $reflectedSerializeType->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'getObjectProperties',
+                'getParameterType',
+                'serializeString',
+            ])
+            ->getMock();
+        $caster->expects($this->once())
+            ->method('getObjectProperties')
+            ->with($parameter)
+            ->willReturn($renderedSchema);
+        $caster->expects($this->exactly(3))
+            ->method('getParameterType')
+            ->with($this->isType('array'))
+            ->will($this->onConsecutiveCalls('object', 'string', 'string'));
+        $caster->method('serializeString')
+            ->will($this->returnArgument(0));
+
+        $result = $reflectedSerializeType->invokeArgs(
+            $caster,
+            [
+                $value,
+                $parameter,
+            ]
+        );
+
+        $this->assertSame($value, $result);
     }
 
     public function testSerializeTypeHandlesString()
     {
-        $this->markTestIncomplete();
+        $parameter = [
+            'some param',
+        ];
+        $value = 'some value';
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedSerializeType = $reflectedCaster->getMethod('serializeType');
+        $reflectedSerializeType->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'getObjectProperties',
+                'getParameterType',
+                'serializeString',
+            ])
+            ->getMock();
+        $caster->expects($this->never())
+            ->method('getObjectProperties');
+        $caster->expects($this->once())
+            ->method('getParameterType')
+            ->with($parameter)
+            ->willReturn('string');
+        $caster->expects($this->once())
+            ->method('serializeString')
+            ->with($value, $parameter)
+            ->will($this->returnArgument(0));
+
+        $result = $reflectedSerializeType->invokeArgs(
+            $caster,
+            [
+                $value,
+                $parameter,
+            ]
+        );
+
+        $this->assertSame($value, $result);
     }
 
     public function testSerializeTypeIgnoresOtherTypes()
     {
-        $this->markTestIncomplete();
+        $parameter = [
+            'some param',
+        ];
+        $value = 'some value';
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedSerializeType = $reflectedCaster->getMethod('serializeType');
+        $reflectedSerializeType->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->setMethods([
+                'getObjectProperties',
+                'getParameterType',
+                'serializeString',
+            ])
+            ->getMock();
+        $caster->expects($this->never())
+            ->method('getObjectProperties');
+        $caster->expects($this->once())
+            ->method('getParameterType')
+            ->with($parameter)
+            ->willReturn('number');
+        $caster->expects($this->never())
+            ->method('serializeString');
+
+        $result = $reflectedSerializeType->invokeArgs(
+            $caster,
+            [
+                $value,
+                $parameter,
+            ]
+        );
+
+        $this->assertSame($value, $result);
     }
 
     public function testSerializeStringIgnoresIfNoFormat()
     {
-        $this->markTestIncomplete();
+        $parameter = [
+            'some param',
+        ];
+        $value = 'some value';
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedSerializeString = $reflectedCaster->getMethod('serializeString');
+        $reflectedSerializeString->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $result = $reflectedSerializeString->invokeArgs(
+            $caster,
+            [
+                $value,
+                $parameter,
+            ]
+        );
+
+        $this->assertSame($value, $result);
     }
 
     public function testSerializeStringHandlesDate()
     {
-        $this->markTestIncomplete();
+        $parameter = [
+            'format' => 'date',
+        ];
+        $value = new DateTime();
+        $expectedValue = $value->format('Y-m-d');
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedSerializeString = $reflectedCaster->getMethod('serializeString');
+        $reflectedSerializeString->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $result = $reflectedSerializeString->invokeArgs(
+            $caster,
+            [
+                $value,
+                $parameter,
+            ]
+        );
+
+        $this->assertSame($expectedValue, $result);
     }
 
     public function testSerializeStringHandlesDateTime()
     {
-        $this->markTestIncomplete();
+        $parameter = [
+            'format' => 'date-time',
+        ];
+        $value = new DateTime();
+        $expectedValue = $value->format('c');
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedSerializeString = $reflectedCaster->getMethod('serializeString');
+        $reflectedSerializeString->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $result = $reflectedSerializeString->invokeArgs(
+            $caster,
+            [
+                $value,
+                $parameter,
+            ]
+        );
+
+        $this->assertSame($expectedValue, $result);
     }
 
     public function testSerializeStringIgnoresOtherTypes()
     {
-        $this->markTestIncomplete();
+        $parameter = [
+            'format' => 'some format',
+        ];
+        $value = 'some value';
+
+        $reflectedCaster = new ReflectionClass(Caster::class);
+        $reflectedSerializeString = $reflectedCaster->getMethod('serializeString');
+        $reflectedSerializeString->setAccessible(true);
+
+        $caster = $this->getMockBuilder(Caster::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $result = $reflectedSerializeString->invokeArgs(
+            $caster,
+            [
+                $value,
+                $parameter,
+            ]
+        );
+
+        $this->assertSame($value, $result);
     }
 
     public function testLog()
