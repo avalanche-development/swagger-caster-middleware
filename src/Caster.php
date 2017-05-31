@@ -39,7 +39,7 @@ class Caster implements LoggerAwareInterface
         $request = $request->withAttribute('swagger', $updatedSwagger);
 
         $result = $next($request, $response);
-        $result = $this->castResponseBody($response, $request->getAttribute('swagger'));
+        $result = $this->castResponseBody($result, $request->getAttribute('swagger'));
 
         $this->log('finished');
         return $result;
@@ -92,7 +92,9 @@ class Caster implements LoggerAwareInterface
             case 'object':
                 $properties = $this->getObjectProperties($parameter);
                 foreach ($properties as $key => $schema) {
-                    $value[$key] = $this->castType($value[$key], $schema);
+                    if (array_key_exists($key, $value)) {
+                        $value[$key] = $this->castType($value[$key], $schema);
+                    }
                 }
                 break;
             case 'string':
@@ -263,7 +265,9 @@ class Caster implements LoggerAwareInterface
             case 'object':
                 $properties = $this->getObjectProperties($parameter);
                 foreach ($properties as $key => $schema) {
-                    $value[$key] = $this->serializeType($value[$key], $schema);
+                    if (array_key_exists($key, $value)) {
+                        $value[$key] = $this->serializeType($value[$key], $schema);
+                    }
                 }
                 break;
             case 'string':

@@ -150,8 +150,9 @@ class CasterTest extends PHPUnit_Framework_TestCase
             ->willReturn($mockRequest);
 
         $mockResponse = $this->createMock(Response::class);
-        $mockCallable = function ($request, $response) use ($mockRequest) {
-            return $response;
+        $mockStackResponse = $this->createMock(Response::class);
+        $mockCallable = function ($request, $response) use ($mockStackResponse) {
+            return $mockStackResponse;
         };
 
         $caster = $this->getMockBuilder(Caster::class)
@@ -172,7 +173,7 @@ class CasterTest extends PHPUnit_Framework_TestCase
 
         $result = $caster->__invoke($mockRequest, $mockResponse, $mockCallable);
 
-        $this->assertSame($mockResponse, $result);
+        $this->assertSame($mockStackResponse, $result);
     }
 
     public function testInvokePassesResponseThroughBodyCaster()
@@ -604,6 +605,9 @@ class CasterTest extends PHPUnit_Framework_TestCase
                 'type' => 'string',
             ],
             'key2' => [
+                'type' => 'string',
+            ],
+            'key3' => [
                 'type' => 'string',
             ],
         ];
@@ -1546,6 +1550,9 @@ class CasterTest extends PHPUnit_Framework_TestCase
                 'type' => 'string',
             ],
             'key2' => [
+                'type' => 'string',
+            ],
+            'key3' => [
                 'type' => 'string',
             ],
         ];
